@@ -6,7 +6,7 @@ Copyright (c) Onlime Webhosting (http://www.onlime.ch)
 
 ## Credits
 
-This project was forked from [bejelith/send_rate_policyd](https://github.com/bejelith/send_rate_policyd). All credits go to [Simone Caruso](http://www.simonecaruso.com).
+This project was forked from [onlime/send_rate_policyd](https://github.com/onlime/send_rate_policyd). All credits go to [Simone Caruso](http://www.simonecaruso.com).
 
 ## Purpose
 
@@ -22,21 +22,10 @@ ratelimit-policyd will never be as feature-rich as other policy daemons. Its mai
 
 ## New Features
 
-The original forked code from [bejelith/send_rate_policyd](https://github.com/bejelith/send_rate_policyd) was improved with the following new features:
+The original forked code from [onlime/send_rate_policyd](https://github.com/onlime/send_rate_policyd) was improved with the following new features:
 
-- automatically inserts new SASL-users (upon first email sent)
-- Debian default init.d startscript
-- added installer and documentation
-- bugfix: weekly mode did not work (expiry date was not correctly calculated)
-- bugfix: counters did not get reset after expiry
-- additional information in DB: updated timestamp
-- added view_ratelimit in DB to make Unix timestamps human readable (default datetime format)
-- syslog messaging (similar to Postfix-policyd) including all relevant information and counter/quota
-- more detailed logging
-- added logrotation script for /var/log/ratelimit-policyd.log
-- added flag in ratelimit DB table to make specific quotas persistent (all others will get reset to default after expiry)
-- continue raising counter even in over quota state
-
+- added option to set quota per user. (user_quota table)
+ 
 ## Installation
 
 Recommended installation:

@@ -51,3 +51,9 @@ ALTER TABLE `ratelimit` MODIFY `updated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIME
 ALTER TABLE `ratelimit` MODIFY `expiry` INT(10) UNSIGNED DEFAULT '0' COMMENT 'expiry (Unix-timestamp) after which the counter gets reset';
 ALTER TABLE `ratelimit` ADD `persist` TINYINT(1) NOT NULL DEFAULT '0' COMMENT 'Do not reset the given quota to the default value after expiry reached.' AFTER `sender`;
 */
+
+CREATE TABLE `user_quota` (
+  `email` varchar(200) NOT NULL DEFAULT '',
+  `quota` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -11,7 +11,7 @@ use File::Basename;
 my $semaphore = new Thread::Semaphore;
 
 ### CONFIGURATION SECTION
-my @allowedhosts    = ('127.0.0.1', '10.0.0.1');
+my @allowedhosts    = ('127.0.0.1', '80.249.164.53');
 my $LOGFILE         = "/var/log/ratelimit-policyd.log";
 my $PIDFILE         = "/var/run/ratelimit-policyd.pid";
 my $SYSLOG_IDENT    = "ratelimit-policyd";
@@ -21,9 +21,9 @@ chomp( my $vhost_dir = `pwd`);
 my $port            = 10032;
 my $listen_address  = '127.0.0.1'; # or '0.0.0.0'
 my $s_key_type      = 'email'; # domain or email
-my $dsn             = "DBI:mysql:policyd:127.0.0.1";
+my $dsn             = "DBI:mysql:policyd:localhost";
 my $db_user         = 'policyd';
-my $db_passwd       = '************';
+my $db_passwd       = 'polpass12';
 my $db_table        = 'ratelimit';
 my $db_quotacol     = 'quota';
 my $db_tallycol     = 'used';
@@ -32,11 +32,11 @@ my $db_expirycol    = 'expiry';
 my $db_wherecol     = 'sender';
 my $db_persistcol   = 'persist';
 my $deltaconf       = 'daily'; # hourly|daily|weekly|monthly
-my $defaultquota    = 1000;
+my $defaultquota    = 100;
 my $sql_getquota    = "SELECT $db_quotacol, $db_tallycol, $db_expirycol, $db_persistcol FROM $db_table WHERE $db_wherecol = ? AND $db_quotacol > 0";
 my $sql_updatequota = "UPDATE $db_table SET $db_tallycol = $db_tallycol + ?, $db_updatedcol = NOW(), $db_expirycol = ? WHERE $db_wherecol = ?";
-my $sql_updatereset = "UPDATE $db_table SET $db_quotacol = ?, $db_tallycol = ?, $db_updatedcol = NOW(), $db_expirycol = ? WHERE $db_wherecol = ?";
-my $sql_insertquota = "INSERT INTO $db_table ($db_wherecol, $db_quotacol, $db_tallycol, $db_expirycol) VALUES (?, ?, ?, ?)";
+my $sql_updatereset = "UPDATE $db_table SET $db_quotacol = (SELECT IF(b.quota IS NULL, a.quota, b.quota) FROM user_quota AS a LEFT JOIN user_quota AS b ON b.email = ? WHERE a.email = 'DEFAULT' LIMIT 1), $db_tallycol = ?, $db_updatedcol = NOW(), $db_expirycol = ? WHERE $db_wherecol = ?";
+my $sql_insertquota = "INSERT INTO $db_table ($db_wherecol, $db_quotacol, $db_tallycol, $db_expirycol) VALUES (?, (SELECT IF(b.quota IS NULL, a.quota, b.quota) FROM user_quota AS a LEFT JOIN user_quota AS b ON b.email = ? WHERE a.email = 'DEFAULT' LIMIT 1), ?, ?)";
 ### END OF CONFIGURATION SECTION
 
 $0=join(' ',($0,@ARGV));
@@ -264,7 +264,7 @@ sub handle_req {
 			my $expire = calcexpire($deltaconf);
 			$sql_query = $dbh->prepare($sql_insertquota);
 			logger("Inserting $skey, $defaultquota, $recipient_count, $expire");
-			$sql_query->execute($skey, $defaultquota, $recipient_count, $expire)
+			$sql_query->execute($skey, $skey, $recipient_count, $expire)
 				or logger("Query error: ". $sql_query->errstr);
 			$sql_query->finish();
 			$dbh->disconnect;
@@ -283,7 +283,7 @@ sub handle_req {
 		my $dbh = get_db_handler()
 			or return "dunno";;
 		my $sql_query = $dbh->prepare($sql_updatereset);
-		$sql_query->execute($newQuota, 0, $quotahash{$skey}{'expire'}, $skey)
+		$sql_query->execute($skey, 0, $quotahash{$skey}{'expire'}, $skey)
 			or logger("Query error: ". $sql_query->errstr);
 	}
 	$quotahash{$skey}{'tally'} += $recipient_count;
